@@ -1,6 +1,8 @@
 package org.wisner.weather;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -13,14 +15,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.wisner.weather.data.Conditions;
 import org.wisner.weather.network.ConditionsDownloader;
+
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 public class WeatherActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final int PICK_CITY = 777;
+    private static final int PICK_BACKGROUND = 11;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,11 +112,21 @@ public class WeatherActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.action_settings:
+                return true;
+            case R.id.action_pick_background:
+                pickImage();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void pickImage() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        startActivityForResult(intent, PICK_BACKGROUND);
     }
 
     @Override
@@ -124,8 +141,27 @@ public class WeatherActivity extends AppCompatActivity
             case PICK_CITY:
                 showCurrentWeather(data);
                 break;
-
+            case PICK_BACKGROUND:
+                setBackground(data.getData());
+                break;
         }
+    }
+
+
+    private void setBackground(Uri uri) {
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(uri);
+            Drawable image = Drawable.createFromStream(inputStream, uri.getLastPathSegment());
+            View weatherView = findViewById(R.id.content_weather);
+            weatherView.setBackground(image);
+            Toast.makeText(this, "You picked an image!", Toast.LENGTH_LONG).show();
+        } catch (FileNotFoundException e) {
+            showError(R.string.error_cant_show_image);
+        }
+    }
+
+    private void showError(int message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     @SuppressWarnings("StatementWithEmptyBody")

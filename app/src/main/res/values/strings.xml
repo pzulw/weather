@@ -5,4 +5,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+    <string name="action_pick_background">Pick Background</string>
+
+    <string name="error_cant_show_image">Unable to display image</string>
 </resources>
