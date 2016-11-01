@@ -12,8 +12,16 @@ import java.io.InputStream;
  */
 public class ConditionsDownloader {
 
-    private static final String CONDITIONS_ENDPOINT = "conditions/q/MA/Cambridge.json";
+    private static final String CONDITIONS_ENDPOINT = "conditions/q/%s/%s.json";
     public static final Conditions FAILED = null;
+
+    final private String city;
+    final private String stateCode;
+
+    public ConditionsDownloader(String city, String stateCode) {
+        this.city = city;
+        this.stateCode = stateCode;
+    }
 
     public interface DownloadReceiver {
         void onReceived(Conditions condition);
@@ -41,7 +49,9 @@ public class ConditionsDownloader {
 
     private Conditions download() throws DownloadException, ParseException {
         WeatherDownloader weatherDownloader = new WeatherDownloader();
-        InputStream jsonStream = weatherDownloader.download(CONDITIONS_ENDPOINT);
+
+        String conditionsEndpoint = String.format(CONDITIONS_ENDPOINT, stateCode, city);
+        InputStream jsonStream = weatherDownloader.download(conditionsEndpoint);
         ConditionsParser parser = new ConditionsParser();
         return parser.parse(jsonStream);
     }

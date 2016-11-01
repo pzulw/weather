@@ -1,5 +1,6 @@
 package org.wisner.weather;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -19,6 +20,8 @@ import org.wisner.weather.network.ConditionsDownloader;
 public class WeatherActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    private static final int PICK_CITY = 777;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,7 +33,7 @@ public class WeatherActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showCurrentWeather();
+                showCityPicker();
             }
         });
 
@@ -44,9 +47,19 @@ public class WeatherActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
-    private void showCurrentWeather() {
+    private void showCityPicker() {
+        startActivityForResult(new Intent(this, PickCityActivity.class), PICK_CITY);
+    }
 
-        ConditionsDownloader conditionsDownloader = new ConditionsDownloader();
+    private void showCurrentWeather(Intent cityInfo) {
+        String city = cityInfo.getStringExtra(PickCityActivity.EXTRA_CITY);
+        String state = cityInfo.getStringExtra(PickCityActivity.EXTRA_STATE);
+        showCurrentWeather(city, state);
+    }
+
+    private void showCurrentWeather(String city, String stateCode) {
+
+        ConditionsDownloader conditionsDownloader = new ConditionsDownloader(city, stateCode);
         conditionsDownloader.requestDownload(new ConditionsDownloader.DownloadReceiver() {
             @Override
             public void onReceived(Conditions conditions) {
@@ -97,6 +110,22 @@ public class WeatherActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+
+        switch (requestCode) {
+            case PICK_CITY:
+                showCurrentWeather(data);
+                break;
+
+        }
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
