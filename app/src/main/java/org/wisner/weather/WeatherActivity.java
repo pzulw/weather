@@ -28,6 +28,10 @@ public class WeatherActivity extends AppCompatActivity
 
     private static final int PICK_CITY = 777;
     private static final int PICK_BACKGROUND = 11;
+    public static final String CITY = "CITY";
+    public static final String SUMMARY = "SUMMARY";
+    public static final String TEMPURATURE = "TEMPURATURE";
+    private Conditions conditions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +58,27 @@ public class WeatherActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        this.conditions = new Conditions();
+        conditions.setCity(savedInstanceState.getString(CITY));
+        conditions.setSummary(savedInstanceState.getString(SUMMARY));
+        conditions.setTempurature(savedInstanceState.getString(TEMPURATURE));
+        setWeatherInUI(conditions);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (conditions == null) {
+            return;
+        }
+        outState.putString(CITY, conditions.getCity());
+        outState.putString(SUMMARY, conditions.getSummary());
+        outState.putString(TEMPURATURE, conditions.getTempurature());
+    }
+
     private void showCityPicker() {
         startActivityForResult(new Intent(this, PickCityActivity.class), PICK_CITY);
     }
@@ -76,6 +101,7 @@ public class WeatherActivity extends AppCompatActivity
     }
 
     private void setWeatherInUI(Conditions conditions) {
+        this.conditions = conditions;
         setText(R.id.city, conditions.getCity());
         setText(R.id.summary, conditions.getSummary());
         setText(R.id.temperature, conditions.getTempurature());
