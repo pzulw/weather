@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -75,7 +76,8 @@ public class WeatherActivity extends AppCompatActivity
         });
     }
 
-    private void setWeatherInUI(Conditions conditions) {
+    @VisibleForTesting
+    void setWeatherInUI(Conditions conditions) {
         setText(R.id.city, conditions.getCity());
         setText(R.id.summary, conditions.getSummary());
         setText(R.id.temperature, conditions.getTempurature());
