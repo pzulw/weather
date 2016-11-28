@@ -33,6 +33,7 @@ public class ConditionsParserTest {
 
         assertEquals("Cambridge, MA", conditions.getCity());
         assertEquals("46.8 F (8.2 C)", conditions.getTempurature());
+        assertEquals(1477425984, conditions.getTimestamp());
 
     }
 

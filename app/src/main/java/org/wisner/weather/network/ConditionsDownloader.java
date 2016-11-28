@@ -47,7 +47,7 @@ public class ConditionsDownloader {
         }.execute();
     }
 
-    private Conditions download() throws DownloadException, ParseException {
+    public Conditions download() throws DownloadException, ParseException {
         WeatherDownloader weatherDownloader = new WeatherDownloader();
 
         String conditionsEndpoint = String.format(CONDITIONS_ENDPOINT, stateCode, city);
