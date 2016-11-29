@@ -1,9 +1,14 @@
 package org.wisner.weather;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -15,11 +20,12 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.wisner.weather.data.Conditions;
-import org.wisner.weather.network.ConditionsDownloader;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -32,7 +38,11 @@ public class WeatherActivity extends AppCompatActivity
     public static final String CITY = "CITY";
     public static final String SUMMARY = "SUMMARY";
     public static final String TEMPURATURE = "TEMPURATURE";
+    public static final IntentFilter WEATHER_BROADCAST_FILTER = new IntentFilter(WeatherDownloadService.BROADCAST_WEATHER_CONDITIONS);
     private Conditions conditions;
+    private BroadcastReceiver weatherUpdateBroadcastReceiver;
+    private WeatherUpdateRequester weatherUpdateRequester;
+    private Handler uiHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +67,16 @@ public class WeatherActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        uiHandler = new Handler(Looper.myLooper());
+        weatherUpdateRequester = new WeatherUpdateRequester(this);
+        weatherUpdateBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Conditions conditions = Conditions.fromIntent(intent);
+                setWeatherInUI(conditions);
+            }
+        };
     }
 
     @Override
@@ -80,6 +100,18 @@ public class WeatherActivity extends AppCompatActivity
         outState.putString(TEMPURATURE, conditions.getTempurature());
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(weatherUpdateBroadcastReceiver, WEATHER_BROADCAST_FILTER);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(weatherUpdateBroadcastReceiver);
+    }
+
     private void showCityPicker() {
         startActivityForResult(new Intent(this, PickCityActivity.class), PICK_CITY);
     }
@@ -90,19 +122,18 @@ public class WeatherActivity extends AppCompatActivity
         showCurrentWeather(city, state);
     }
 
-    private void showCurrentWeather(String city, String stateCode) {
-
-        ConditionsDownloader conditionsDownloader = new ConditionsDownloader(city, stateCode);
-        conditionsDownloader.requestDownload(new ConditionsDownloader.DownloadReceiver() {
+    private void showCurrentWeather(final String city, final String stateCode) {
+        weatherUpdateRequester.requestUpdateWeatherIntent(city, stateCode);
+        uiHandler.postDelayed(new Runnable() {
             @Override
-            public void onReceived(Conditions conditions) {
-                setWeatherInUI(conditions);
+            public void run() {
+                showCurrentWeather(city, stateCode);
             }
-        });
+        }, 2000);
     }
 
     @VisibleForTesting
-    private void setWeatherInUI(Conditions conditions) {
+    void setWeatherInUI(Conditions conditions) {
         this.conditions = conditions;
         setText(R.id.city, conditions.getCity());
         setText(R.id.summary, conditions.getSummary());
@@ -111,7 +142,9 @@ public class WeatherActivity extends AppCompatActivity
 
     private void setText(int id, String value) {
         TextView view = (TextView) findViewById(id);
+        final Animation quickSpin = AnimationUtils.loadAnimation(this, R.anim.spin);
         view.setText(value);
+        view.startAnimation(quickSpin);
     }
 
 

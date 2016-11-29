@@ -15,6 +15,7 @@ public class ConditionsParser {
     public static final String WEATHER = "weather";
     public static final String TEMPERATURE_STRING = "temperature_string";
     public static final String DISPLAY_LOCATION = "display_location";
+    public static final String TIMESTAMP = "observation_epoch";
     public static final String FULL = "full";
 
     public Conditions parse(InputStream jsonStream) throws ParseException {
@@ -32,6 +33,9 @@ public class ConditionsParser {
 
             String city = currentObservations.getJSONObject(DISPLAY_LOCATION).getString(FULL);
             conditions.setCity(city);
+
+            long timestamp = currentObservations.getLong(TIMESTAMP);
+            conditions.setTimestamp(timestamp);
 
             return conditions;
         } catch (JSONException e) {
